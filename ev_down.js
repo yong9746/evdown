@@ -1,11 +1,12 @@
+const express = require('express');
 const http = require('http');
 const https = require('https');
 const url = require('url');
+const app = express();
 
-// Create an HTTP server
-http.createServer((req, res) => {
-    // Parse the request URL
-    const queryObject = url.parse(req.url, true).query;
+app.get('/', (req, res) => {
+    // Parse the query parameters
+    const queryObject = req.query;
 
     if (queryObject.link && queryObject.zapp_url_stream === '1') {
         const decodedUrl = decodeURIComponent(queryObject.link);
@@ -34,14 +35,18 @@ http.createServer((req, res) => {
 
         // Handle errors in the proxy request
         proxyRequest.on('error', (err) => {
-            res.writeHead(500, { 'Content-Type': 'text/plain' });
-            res.end('Error: ' + err.message);
+            res.status(500).send('Error: ' + err.message);
         });
 
         // End the proxy request
         proxyRequest.end();
     } else {
-        res.writeHead(400, { 'Content-Type': 'text/plain' });
-        res.end('Invalid parameters.');
+        res.status(400).send('Invalid parameters.');
     }
-})
+});
+
+// Use the environment variable PORT provided by Render
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
